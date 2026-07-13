@@ -1,0 +1,211 @@
+{
+  "version": "1.0",
+  "base_path": "/api",
+  "resources": {
+    "players": {
+      "path": "/players",
+      "operations": {
+        "search": {
+          "method": "GET",
+          "path": "/search",
+          "params": { "q": "string non-empty" },
+          "response": { "data": [{ "id": "int", "name": "string" }] }
+        },
+        "get": {
+          "method": "GET",
+          "path": "/:playerId",
+          "params": { "playerId": "int>0" },
+          "response": { "data": { "id": "int", "name": "string" } },
+          "errors": [404]
+        },
+        "challenges": {
+          "method": "GET",
+          "path": "/:playerId/challenges/weekly",
+          "params": { "playerId": "int>0" },
+          "response": { "data": { "week": "string", "progress": "int", "completed": "bool" } },
+          "errors": [404, 500]
+        },
+        "points": {
+          "history": {
+            "method": "GET",
+            "path": "/:playerId/points/history",
+            "params": { "playerId": "int>0" },
+            "query": { "limit": "int default 20", "offset": "int>=0 default 0" },
+            "response": { "data": [{ "id": "int", "points": "int", "transaction_type": "enum[run_completion,bonus,penalty,admin_adjustment]", "reason": "string", "run_id": "int", "created_at": "datetime" }], "pagination": { "total": "int", "limit": "int", "offset": "int", "next": "string|null" } },
+            "errors": [404]
+          },
+          "award": {
+            "method": "POST",
+            "path": "/:playerId/points",
+            "params": { "playerId": "int>0" },
+            "body": { "points": "int", "transaction_type": "enum[run_completion,bonus,penalty,admin_adjustment]", "reason": "string", "run_id": "int optional" },
+            "response": { "transaction_id": "int", "new_balance": "int" },
+            "errors": [400, 404]
+          }
+        },
+        "settings": {
+          "get": {
+            "method": "GET",
+            "path": "/:playerId/settings",
+            "params": { "playerId": "int>0" },
+            "response": { "data": { "raw_maps": "bool", "show_self_keys": "bool", "show_other_keys": "bool", "show_ragdolls": "bool", "show_self_kills": "bool", "show_other_kills": "bool", "hide_tips": "bool", "render_distance": "int", "hide_distance": "int", "mutator_ids": "[int]", "tag_ids": "[int]" } },
+            "errors": [404]
+          },
+          "update": {
+            "method": "PATCH",
+            "path": "/:playerId/settings",
+            "params": { "playerId": "int>0" },
+            "body": { "settings": { "raw_maps?": "bool", "show_self_keys?": "bool", "show_other_keys?": "bool", "show_ragdolls?": "bool", "show_self_kills?": "bool", "show_other_kills?": "bool", "hide_tips?": "bool", "render_distance?": "int", "hide_distance?": "int", "mutator_ids?": "[int]", "tag_ids?": "[int]" } },
+            "response": "204",
+            "errors": [400, 404]
+          }
+        },
+        "blocks": {
+          "upsert": {
+            "method": "PUT",
+            "path": "/:playerId/blocks/:targetPlayerId",
+            "params": { "playerId": "int>0", "targetPlayerId": "int>0" },
+            "body": { "blocks": { "chat?": "bool", "voice?": "bool", "voicecmd?": "bool" } },
+            "validation": "at least one block flag required",
+            "response": "204",
+            "errors": [400, 404]
+          },
+          "get": {
+            "method": "GET",
+            "path": "/:playerId/blocks",
+            "params": { "playerId": "int>0" },
+            "response": { "data": [{ "target_player_id": "int", "blocks": { "chat": "bool", "voice": "bool", "voicecmd": "bool" } }] },
+            "errors": [404]
+          },
+          "delete": {
+            "method": "DELETE",
+            "path": "/:playerId/blocks/:targetPlayerId",
+            "params": { "playerId": "int>0", "targetPlayerId": "int>0" },
+            "response": "204",
+            "errors": [404]
+          }
+        }
+      }
+    },
+    "leaderboards": {
+      "path": "/leaderboards",
+      "common_query": { "mutators": "csv|[int]", "tags": "csv|[int]", "playerId": "int>0", "limit": "int 1-100 default 50", "offset": "int>=0 default 0" },
+      "operations": {
+        "map_fastest": {
+          "method": "GET",
+          "path": "/map/:mapId/fastest",
+          "params": { "mapId": "int>0" },
+          "query": "supports common_query",
+          "response": { "data": [{ "rank": "int", "player_id": "int", "run_id": "int", "time": "float", "mutators": "[int]", "tags": "[int]" }], "pagination": { "total": "int", "limit": "int", "offset": "int" } },
+          "errors": [404]
+        },
+        "records": {
+          "method": "GET",
+          "path": "/records",
+          "query": "supports common_query",
+          "response": { "data": [{ "rank": "int", "player_id": "int", "record_count": "int", "player_name": "string" }], "pagination": { "total": "int", "limit": "int", "offset": "int" } }
+        },
+        "extractions": {
+          "method": "GET",
+          "path": "/extractions",
+          "query": "supports common_query",
+          "response": { "data": [{ "rank": "int", "player_id": "int", "extraction_count": "int", "player_name": "string" }], "pagination": { "total": "int", "limit": "int", "offset": "int" } }
+        }
+      }
+    },
+    "runs": {
+      "path": "/runs",
+      "operations": {
+        "search": {
+          "method": "GET",
+          "path": "",
+          "query": { "playerId": "int>0", "mapId": "int>0", "tierId": "int>0", "minKills": "int>=0", "maxDeaths": "int>=0", "minPresence": "int 0-100", "after": "datetime", "before": "datetime", "mutators": "csv|[int]", "tags": "csv|[int]", "limit": "int default 50", "offset": "int default 0" },
+          "notes": "after converted to unix epoch, before YYYY-MM-DD becomes 23:59:59",
+          "response": { "data": [{ "id": "int", "player_id": "int", "map_id": "int", "kills": "int", "deaths": "int", "extraction_time": "float", "created_at": "datetime" }], "pagination": { "total": "int", "limit": "int", "offset": "int", "next": "string|null" } }
+        },
+        "get": {
+          "method": "GET",
+          "path": "/:id",
+          "params": { "id": "int>0" },
+          "response": { "data": { "id": "int", "playerId": "int", "sessionId": "string", "mapId": "int", "damageTaken": "int", "zombieDamageTaken": "int", "zombieDamageDealt": "int", "kills": "int", "deaths": "int", "presencePercentage": "int", "extractionTime": "float", "replayId": "string", "pointsAwarded": "int", "mutators": "[int]", "tags": "[int]", "weaponKills": [{ "weaponId": "int", "kills": "int" }], "created_at": "datetime" } },
+          "errors": [404]
+        },
+        "create": {
+          "method": "POST",
+          "path": "",
+          "body": { "playerId": "int", "sessionId": "string", "mapId": "int", "damageTaken": "int", "zombieDamageTaken": "int", "zombieDamageDealt": "int", "kills": "int", "deaths": "int", "presencePercentage": "int", "extractionTime": "float", "replayId": "string", "pointsAwarded": "int", "mutators": "[int]", "tags": "[int]", "weaponKills": [{ "weaponId": "int", "kills": "int" }] },
+          "response": { "runId": "int" },
+          "headers": { "Location": "/api/runs/:runId" },
+          "errors": [400, 404]
+        }
+      }
+    },
+    "maps": {
+      "path": "/maps",
+      "operations": {
+        "list": {
+          "method": "GET",
+          "path": "",
+          "query": { "tierId": "int>0", "search": "string" },
+          "response": { "data": [{ "id": "int", "name": "string", "tier_id": "int", "description": "string" }], "pagination": { "total": "int", "limit": "int", "offset": "int" } }
+        },
+        "get": {
+          "method": "GET",
+          "path": "/:mapId",
+          "params": { "mapId": "int>0" },
+          "response": { "data": { "id": "int", "name": "string", "tier_id": "int", "description": "string" } },
+          "errors": [404]
+        }
+      }
+    },
+    "map_tags": {
+      "path": "/map-tags",
+      "operations": {
+        "list": {
+          "method": "GET",
+          "path": "",
+          "query": { "search": "string" },
+          "response": { "data": [{ "id": "int", "name": "string", "description": "string" }] }
+        }
+      }
+    },
+    "mutators": {
+      "path": "/mutators",
+      "operations": {
+        "list": {
+          "method": "GET",
+          "path": "",
+          "query": { "search": "string" },
+          "response": { "data": [{ "id": "int", "name": "string", "description": "string" }] }
+        }
+      }
+    },
+    "run_tags": {
+      "path": "/run-tags",
+      "operations": {
+        "list": {
+          "method": "GET",
+          "path": "",
+          "query": { "search": "string" },
+          "response": { "data": [{ "id": "int", "name": "string", "description": "string" }] }
+        }
+      }
+    },
+    "tiers": {
+      "path": "/tiers",
+      "operations": {
+        "list": {
+          "method": "GET",
+          "path": "",
+          "query": { "search": "string" },
+          "response": { "data": [{ "id": "int", "name": "string", "description": "string", "difficulty_score": "int" }] }
+        }
+      }
+    }
+  },
+  "common_patterns": {
+    "pagination": { "total": "int", "limit": "int", "offset": "int", "next": "string|null" },
+    "errors": { "400": "Bad Request", "404": "Not Found", "500": "Internal Server Error" },
+    "csv_or_repeated": "mutators and tags can be provided as ?mutators=1,2 or ?mutators=1&mutators=2"
+  }
+}

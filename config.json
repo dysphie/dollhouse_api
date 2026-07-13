@@ -1,0 +1,63 @@
+{
+  "tiers": [
+    { "name": "Easy", "description": "Easy difficulty tier", "points": 10, "enabled": true },
+    { "name": "Medium", "description": "Medium difficulty tier", "points": 25, "enabled": true },
+    { "name": "Hard", "description": "Hard difficulty tier", "points": 50, "enabled": true }
+  ],
+  "mutators": [
+    {
+      "name": "friendly_fire",
+      "description": "",
+      "enabled": true,
+      "cvars": [{ "name": "mp_friendlyfire", "value": "1" }]
+    },
+    {
+      "name": "hardcore",
+      "description": "",
+      "enabled": true,
+      "cvars": [
+        { "name": "z_health", "value": "150" },
+        { "name": "z_speed", "value": "1.2" }
+      ]
+    },
+    {
+      "name": "low_gravity",
+      "description": "",
+      "enabled": true,
+      "cvars": [{ "name": "sv_gravity", "value": "300" }]
+    }
+  ],
+  "perf_tags": [
+    { "name": "no_damage", "description": "", "enabled": true },
+    { "name": "solo", "description": "", "enabled": true },
+    { "name": "flawless", "description": "", "enabled": true }
+  ],
+  "map_tags": [
+    { "name": "urban", "description": "", "enabled": true },
+    { "name": "indoor", "description": "", "enabled": true },
+    { "name": "large", "description": "", "enabled": true }
+  ],
+  "maps": [
+    {
+      "name": "nmo_bank",
+      "stage": "",
+      "tier": "Easy",
+      "enabled": true,
+      "tags": ["large", "indoor"]
+    },
+    {
+      "name": "nmo_hospital",
+      "stage": "",
+      "tier": "Medium",
+      "enabled": true,
+      "tags": ["indoor"]
+    },
+    {
+      "name": "nmo_ravenholm",
+      "stage": "",
+      "tier": "Hard",
+      "enabled": true,
+      "tags": ["urban", "large"]
+    }
+  ]
+}
